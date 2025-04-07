@@ -6,3 +6,6 @@ langchain-unstructured
 google-generativeai
 pysqlite3-binary
 python-dotenv
+pysqlite3-binary
+chromadb
+langchain-chroma
