@@ -1,9 +1,9 @@
-streamlit==1.33.0
+streamlit
 python-dotenv
-langchain==0.1.14
-langchain-core==0.1.35
-langchain-community==0.0.33
-langchain-chroma==0.1.2
-langchain-google-genai==0.0.10
-langchain-unstructured==0.0.2
+langchain
+langchain-core
+langchain-community
+langchain-chroma
+langchain-google-genai
+langchain-unstructured
 pysqlite3-binary
