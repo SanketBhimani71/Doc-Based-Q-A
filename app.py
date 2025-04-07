@@ -1,7 +1,7 @@
 from langchain_unstructured import UnstructuredLoader
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
@@ -13,17 +13,9 @@ import tempfile
 import shutil
 import os
 from langchain_community.vectorstores.utils import filter_complex_metadata
-import pysqlite3 as sqlite3
+import chromadb.api
 
-import sys
-import pysqlite3
-sys.modules["sqlite3"] = pysqlite3
-
-from chromadb import Client
-from chromadb.config import Settings
-
-client = Client(Settings())
-collection = client.get_or_create_collection(name="my_collection")
+chromadb.api.client.SharedSystemClient.clear_system_cache()
 
 
 st.title('Q&A Chatbot')
