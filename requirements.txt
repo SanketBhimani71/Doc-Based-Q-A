@@ -9,3 +9,5 @@ python-dotenv
 pysqlite3-binary
 chromadb
 langchain-chroma
+unstructured
+langchain_unstructured
