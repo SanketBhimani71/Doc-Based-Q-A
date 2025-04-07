@@ -1,3 +1,6 @@
+import sys
+sys.modules['sqlite3'] = sys.modules['pysqlite3']
+
 from langchain_unstructured import UnstructuredLoader
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
