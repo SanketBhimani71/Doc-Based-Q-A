@@ -13,10 +13,10 @@ import tempfile
 import shutil
 import os
 from langchain_community.vectorstores.utils import filter_complex_metadata
-import chromadb.api
+# import chromadb.api
 
 
-chromadb.api.client.SharedSystemClient.clear_system_cache()
+# chromadb.api.client.SharedSystemClient.clear_system_cache()
 
 
 st.title('Q&A Chatbot')
