@@ -16,11 +16,14 @@ from langchain_community.vectorstores.utils import filter_complex_metadata
 import pysqlite3 as sqlite3
 
 import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-import chromadb.api
+import pysqlite3
+sys.modules["sqlite3"] = pysqlite3
 
+from chromadb import Client
+from chromadb.config import Settings
 
-chromadb.api.client.SharedSystemClient.clear_system_cache()
+client = Client(Settings())
+collection = client.get_or_create_collection(name="my_collection")
 
 
 st.title('Q&A Chatbot')
