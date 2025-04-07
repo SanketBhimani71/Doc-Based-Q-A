@@ -13,6 +13,10 @@ import tempfile
 import shutil
 import os
 from langchain_community.vectorstores.utils import filter_complex_metadata
+import pysqlite3 as sqlite3
+
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import chromadb.api
 
 
