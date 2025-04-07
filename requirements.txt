@@ -5,5 +5,5 @@ langchain-core
 langchain-community
 langchain-chroma
 langchain-google-genai
-langchain-unstructured==0.0.2
+langchain-unstructured
 pysqlite3-binary
