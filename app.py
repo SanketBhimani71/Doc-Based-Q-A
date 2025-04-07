@@ -2,100 +2,116 @@ import sys
 import pysqlite3
 sys.modules['sqlite3'] = sys.modules['pysqlite3']
 
-import os
-import tempfile
-from dotenv import load_dotenv
-import streamlit as st
+from langchain_unstructured import UnstructuredLoader
+from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
-from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
+from dotenv import load_dotenv
+import streamlit as st
+import tempfile
+import shutil
+import os
 from langchain_community.vectorstores.utils import filter_complex_metadata
-from langchain_community.document_loaders import UnstructuredFileLoader
+import chromadb.api
 
-# Load environment variables
-load_dotenv()
+chromadb.api.client.SharedSystemClient.clear_system_cache()
 
-st.title('📄 Q&A Chatbot for Documents')
 
-# Sidebar file uploader
+st.title('Q&A Chatbot')
+
 uploaded_file = st.sidebar.file_uploader(
-    "Upload your document (PDF, Markdown, TXT, DOCX)",
-    type=["pdf", "md", "txt", "docx"]
+    "Upload your document (PDF, Markdown, TXT, DOCX)", type=["pdf", "md", "txt", "docx"]
 )
 
+
 def file_upload():
-    try:
-        # Create temp dir and save uploaded file
-        temp_dir = tempfile.mkdtemp()
-        file_path = os.path.join(temp_dir, uploaded_file.name)
 
-        with open(file_path, "wb") as f:
-            f.write(uploaded_file.read())
+    # Create a temporary directory to store uploaded file
+    temp_dir = tempfile.mkdtemp()
+    temp_file_path = os.path.join(temp_dir, uploaded_file.name)
 
-        st.sidebar.success("✅ File uploaded successfully!")
+    with open(temp_file_path, "wb") as f:
+        f.write(uploaded_file.read())
 
-        # Use UnstructuredFileLoader for better compatibility
-        loader = UnstructuredFileLoader(file_path)
-        documents = loader.load()
+    st.sidebar.success("File uploaded successfully!")
 
-        st.sidebar.success("✅ Document loaded successfully!")
-        return documents
-    except Exception as e:
-        st.sidebar.error(f"❌ Error loading file: {str(e)}")
-        return None
+    loader = UnstructuredLoader(temp_file_path)
+    pages = loader.load()
+    st.sidebar.success("Document loaded successfully!")
+    return pages
 
-def embed_documents(docs):
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    chunks = splitter.split_documents(docs)
+
+def process_file():
+    if uploaded_file:
+
+        data = file_upload()
+        return data
+
+
+
+
+data = process_file()
+load_dotenv()
+
+
+def embedding_store(data):
+
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000)
+    docs = text_splitter.split_documents(data)
+
+    print("Total number of documents: ", len(docs))
+
 
     vectorstore = Chroma.from_documents(
-        documents=filter_complex_metadata(chunks),
-        embedding=GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
-    )
+        documents=filter_complex_metadata(docs), embedding=GoogleGenerativeAIEmbeddings(model="models/text-embedding-004"))
 
     return vectorstore
 
-# If user uploaded file
-if uploaded_file:
-    documents = file_upload()
 
-    if documents:
-        # Build Vectorstore
-        vectorstore = embed_documents(documents)
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-pro",
+    temperature=0,
+    max_tokens=500,
+    timeout=None,
+    max_retries=2,
+)
 
-        # Set up retriever
-        retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 10})
+system_prompt = """
+  "You are an assistant for questions-answering tasks. "
+  "Use the following pieces of retrieved context to answer"
+  "the question. If you don't know the answer, say that you"
+  "don't know. Use three sentences maximum and keep the"
+  "answer concise"
+  "\n\n"
+  "{context}"
+"""
 
-        # Set up LLM
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-pro",
-            temperature=0,
-            max_tokens=500
-        )
+prompt = ChatPromptTemplate.from_messages([
+    ("system", system_prompt),
+    ("human", "{input}"),
+])
+if data:
+    
+    vectorstore = embedding_store(data)
+    
+    retriever = vectorstore.as_retriever(
+        search_type="similarity", search_kwargs={"k": 10})
 
-        # Prompt Template
-        system_prompt = """You are an assistant for question-answering tasks.
-                            Use the retrieved context below to answer the user's question.
-                            If you don't know the answer, say so clearly.
-                            Keep answers concise and under 3 sentences.
-                            
-                            {context}"""
+    query = st.chat_input('Say something')
+    input_query = query
 
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt),
-            ("human", "{input}")
-        ])
+    if input_query:
 
-        question_answer_chain = create_stuff_documents_chain(llm, prompt)
-        rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+        question_answer_chain = create_stuff_documents_chain(
+            llm, prompt)
+        rag_chain = create_retrieval_chain(
+            retriever, question_answer_chain)
 
-        # Chat input
-        user_query = st.chat_input("Ask a question about the document...")
+        response = rag_chain.invoke({"input": input_query})
 
-        if user_query:
-            with st.spinner("Searching for answer..."):
-                result = rag_chain.invoke({"input": user_query})
-                st.write(result["answer"])
+        st.write(response["answer"])
