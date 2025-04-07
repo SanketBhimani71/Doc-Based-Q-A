@@ -12,4 +12,4 @@ langchain_unstructured
 chromadb
 langchain-google-genai
 google-generativeai
-pysqlite3-binary
+pysqlite3
