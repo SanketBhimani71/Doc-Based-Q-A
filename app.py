@@ -14,8 +14,6 @@ import shutil
 import os
 from langchain_community.vectorstores.utils import filter_complex_metadata
 import chromadb.api
-import pysqlite3 as sqlite3
-
 
 
 chromadb.api.client.SharedSystemClient.clear_system_cache()
