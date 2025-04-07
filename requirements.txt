@@ -9,7 +9,7 @@ langchain_chroma
 langchainhub
 unstructured
 langchain_unstructured
-chromadb
+chromadb>=0.4.24
 langchain-google-genai
 google-generativeai
 pysqlite3-binary
