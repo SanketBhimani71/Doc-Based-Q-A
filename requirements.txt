@@ -10,3 +10,5 @@ langchainhub
 unstructured
 langchain_unstructured
 chromadb
+langchain-google-genai
+google-generativeai
