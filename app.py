@@ -2,7 +2,7 @@ import sys
 import pysqlite3
 sys.modules['sqlite3'] = sys.modules['pysqlite3']
 
-from langchain_unstructured import UnstructuredLoader as UnstructuredFileLoader
+from langchain.document_loaders import UnstructuredFileLoader
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
